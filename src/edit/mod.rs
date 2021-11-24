@@ -1,4 +1,7 @@
-use std::{cell::RefCell, rc::Rc, sync::Arc};
+//! This module contains code for the TUI that can be invoked by running
+//! `music-manager edit`
+
+use std::sync::Arc;
 
 use crossterm::{
     event::{DisableMouseCapture, EnableMouseCapture},

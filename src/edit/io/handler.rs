@@ -1,4 +1,4 @@
-use std::{sync::Arc, time::Duration};
+use std::sync::Arc;
 
 use eyre::Result;
 use log::error;
@@ -19,7 +19,6 @@ impl IoAsyncHandler {
     pub async fn handle_io_event(&mut self, io_event: IoEvent) {
         let result = match io_event {
             IoEvent::Initialize => self.do_initialize().await,
-            IoEvent::Sleep(duration) => self.do_sleep(duration).await,
         };
 
         if let Err(err) = result {
@@ -34,9 +33,5 @@ impl IoAsyncHandler {
         let mut app = self.app.lock().await;
         app.initialized();
         Ok(())
-    }
-
-    async fn do_sleep(&mut self, _duration: Duration) -> Result<()> {
-        unimplemented!();
     }
 }

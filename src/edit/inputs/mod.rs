@@ -1,5 +1,4 @@
 use crate::edit::inputs::key::*;
-use unicode_width::UnicodeWidthStr;
 
 pub mod events;
 pub mod key;
@@ -21,7 +20,8 @@ impl InputBuffer {
             index: 0,
         }
     }
-    pub fn get_index(&self) -> usize {
+
+    pub fn _get_index(&self) -> usize {
         self.index
     }
 
@@ -32,7 +32,7 @@ impl InputBuffer {
     pub fn get_buffer_drain(&mut self) -> String {
         let buffer = self.buffer.clone();
         self.buffer.clear();
-        return buffer;
+        buffer
     }
 
     pub fn push_char(&mut self, c: char) {

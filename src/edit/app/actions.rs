@@ -34,7 +34,7 @@ pub enum Action {
     LogToggleHideTargets,
 
     // MetadataWidgetActions
-    SaveTagsToFile
+    SaveTagsToFile,
 }
 
 impl Action {
@@ -94,7 +94,7 @@ impl Display for Action {
             Action::SelectUp => "SelectUp",
             Action::Enter => "EnterKey",
             Action::SaveTagsToFile => "SaveTagsToFile",
-            Action::SwitchToDirListWidget => "SwitchToDirListWidget"
+            Action::SwitchToDirListWidget => "SwitchToDirListWidget",
         };
 
         write!(f, "{}", str)

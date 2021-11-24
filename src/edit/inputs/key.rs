@@ -70,6 +70,7 @@ pub enum Key {
 
 impl Key {
     /// If exit
+    #[allow(dead_code)]
     pub fn is_exit(&self) -> bool {
         matches!(self, Key::Ctrl('c') | Key::Char('q') | Key::Esc)
     }

@@ -12,7 +12,7 @@ use tui_logger::TuiLoggerSmartWidget;
 
 use unicode_width::UnicodeWidthStr;
 
-use super::app::{App, AppActiveWidgetState, actions::Actions};
+use super::app::{actions::Actions, App, AppActiveWidgetState};
 
 pub fn draw<B>(f: &mut Frame<B>, app: &mut App) -> Result<()>
 where
@@ -59,7 +59,7 @@ where
                 .border_type(BorderType::Rounded)
                 .style(match app.is_selected(AppActiveWidgetState::InputBar) {
                     true => selected_style,
-                    false => default_style
+                    false => default_style,
                 })
                 .title("Input Bar"),
         );

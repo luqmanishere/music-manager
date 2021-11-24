@@ -1,7 +1,6 @@
 use std::{path::Path, sync::Arc};
 
 use clap::{crate_authors, crate_version, App as CApp, Arg, ArgMatches};
-use crossterm::event::KeyCode;
 use edit::{
     app::App,
     io::{handler::IoAsyncHandler, IoEvent},
@@ -9,18 +8,12 @@ use edit::{
 };
 use eyre::{eyre, Context, Result};
 use log::{debug, info};
-use ui::{exit_tui, Event};
-use util::InputMode;
 use youtube_dl::{
     SearchOptions, SingleVideo as Video, YoutubeDl,
     YoutubeDlOutput::{Playlist, SingleVideo},
 };
 
-use metaflac::Tag;
-
 mod edit;
-mod ui;
-mod util;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -226,52 +219,6 @@ async fn edit(_args: &ArgMatches) -> Result<()> {
     });
 
     start_ui(&app_ui).await?;
-
-    Ok(())
-}
-
-/*
-fn edit(_args: &ArgMatches) -> Result<()> {
-    let (mut terminal, tx, rx) = ui::init_tui()?;
-    let mut app = util::EditApp::new(rx.clone());
-    loop {
-        terminal.draw(|f| ui::draw_edit(f, &mut app).unwrap())?;
-
-        match rx.recv()? {
-            Event::Input(event) => {
-                if !app.input.editing.load(std::sync::atomic::Ordering::Relaxed) {
-                    match event.code {
-                        KeyCode::Char('q') => {
-                            exit_tui(terminal)?;
-                            break;
-                        }
-                        KeyCode::Up | KeyCode::Char('k') => app.on_up(),
-                        KeyCode::Down | KeyCode::Char('j') => app.on_down(),
-                        KeyCode::Char('e') => app.input_mode = InputMode::TextInput,
-                        KeyCode::Enter => {
-                            app.on_enter();
-                        }
-                        KeyCode::Esc => app.on_esc(),
-                        _ => {}
-                    }
-                }
-            }
-            Event::Tick => app.on_tick(),
-            Event::DoneEditing => {}
-        };
-    }
-    Ok(())
-}
-*/
-
-fn tag() -> Result<()> {
-    let mut tag = Tag::read_from_path("test.flac")?;
-    tag.set_vorbis("TITLE", vec!["Yuke"]);
-    tag.set_vorbis("ARTIST", vec!["LiSA", "Luqman LMAO"]);
-
-    let pic = std::fs::read("Yuke Cover Image.jpg")?;
-    tag.add_picture("image/jpeg", metaflac::block::PictureType::CoverFront, pic);
-    tag.save()?;
 
     Ok(())
 }

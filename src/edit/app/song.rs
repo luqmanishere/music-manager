@@ -63,7 +63,7 @@ impl Song {
             .map(|mut album| album.next().unwrap().to_owned());
     }
 
-    fn init_picture(&mut self) {
+    fn _init_picture(&mut self) {
         todo!()
     }
 

@@ -209,6 +209,7 @@ impl App {
                     Key::Char(c) => self.input_buffer.push_char(c),
                     Key::Enter => {
                         self.stop_editing();
+                        self.input_buffer.clear();
                     }
                     Key::Esc => {
                         // Exit the state and clear the buffer
