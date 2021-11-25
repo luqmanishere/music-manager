@@ -1,6 +1,6 @@
 use std::{path::Path, sync::Arc};
 
-use clap::{crate_authors, crate_version, App as CApp, Arg, ArgMatches};
+use clap::{App as CApp, AppSettings, Arg, ArgMatches, crate_authors, crate_version};
 use edit::{
     app::App,
     io::{handler::IoAsyncHandler, IoEvent},
@@ -50,8 +50,11 @@ async fn main() -> Result<()> {
 
 fn setup_cli() -> ArgMatches {
     CApp::new("music-manager")
+        .about("Manage music the way the author likes")
         .version(crate_version!())
         .author(crate_authors!())
+        .setting(AppSettings::SubcommandRequiredElseHelp)
+        .setting(AppSettings::HelpRequired)
         .subcommand(
             CApp::new("download")
                 .about("Downloads the song title given")
