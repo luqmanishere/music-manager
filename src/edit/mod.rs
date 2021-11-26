@@ -10,7 +10,7 @@ use crossterm::{
 };
 
 use eyre::Result;
-use log::warn;
+use log::{error, warn};
 use tui::{backend::CrosstermBackend, Terminal};
 
 use crate::edit::ui::check_size;
@@ -44,8 +44,13 @@ pub async fn start_ui(app: &Arc<tokio::sync::Mutex<App>>) -> Result<()> {
         app.dispatch(io::IoEvent::Initialize).await;
     }
 
-    if check_size(&terminal.size()?) {
-        warn!("Terminal too smol");
+    if !check_size(&terminal.size()?) {
+        let terminal_size = terminal.size()?;
+        error!(
+            "Terminal too smol, it has dimensions {} by {}",
+            terminal_size.width, terminal_size.height
+        );
+        return Ok(());
     }
 
     loop {

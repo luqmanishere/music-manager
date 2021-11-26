@@ -178,10 +178,12 @@ mod tests {
         let _actions: Actions = vec![Action::Quit].into();
     }
 
+    /*
     #[test]
     #[should_panic]
     fn should_panic_when_create_actions_conflict_key() {
         let _actions: Actions =
             vec![Action::Quit, Action::Quit, Action::LogToggleHideTargets].into();
     }
+    */
 }

@@ -1,6 +1,6 @@
 use std::{path::Path, sync::Arc};
 
-use clap::{App as CApp, AppSettings, Arg, ArgMatches, crate_authors, crate_version};
+use clap::{crate_authors, crate_version, App as CApp, AppSettings, Arg, ArgMatches};
 use edit::{
     app::App,
     io::{handler::IoAsyncHandler, IoEvent},
