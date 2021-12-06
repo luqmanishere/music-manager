@@ -242,18 +242,18 @@ impl App {
         &self.actions
     }
 
-    pub fn set_actions(&mut self, actions: Vec<Action>) {
+    fn set_actions(&mut self, actions: Vec<Action>) {
         self.actions = actions.into();
     }
 
-    pub fn start_editing(&mut self) {
+    fn start_editing(&mut self) {
         self.is_input = true;
         self.previous_app_widget = self.current_app_widget;
         self.current_app_widget = AppActiveWidgetState::InputBar;
     }
 
     /// Handle actions after input
-    pub fn stop_editing(&mut self) {
+    fn stop_editing(&mut self) {
         self.is_input = false;
         match self.previous_app_widget {
             AppActiveWidgetState::DirListing => self.enter_dirlisting_widget(),
@@ -273,7 +273,7 @@ impl App {
     }
 
     /// Execute upon entering DirList widget
-    pub fn enter_dirlisting_widget(&mut self) {
+    fn enter_dirlisting_widget(&mut self) {
         self.previous_app_widget = self.current_app_widget;
         self.current_app_widget = AppActiveWidgetState::DirListing;
         // Add dir list specific actions here
@@ -293,7 +293,7 @@ impl App {
     }
 
     /// Execute upon entering MetadataEditorWidget
-    pub fn enter_metadata_editor_widget(&mut self) {
+    fn enter_metadata_editor_widget(&mut self) {
         if self.current_app_widget == AppActiveWidgetState::InputBar {
             self.previous_app_widget = AppActiveWidgetState::MetadataEditor
         } else {
@@ -327,7 +327,7 @@ impl App {
     }
 
     /// Execute upon entering LogViewerWidget
-    pub fn enter_log_viewer_widget(&mut self) {
+    fn enter_log_viewer_widget(&mut self) {
         self.previous_app_widget = self.current_app_widget;
         self.current_app_widget = AppActiveWidgetState::LogViewer;
         self.set_actions(

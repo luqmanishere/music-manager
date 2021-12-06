@@ -183,7 +183,7 @@ fn draw_help(actions: &Actions) -> Table {
         }
     }
 
-    // TODO Make it show all actions
+    // TODO: Make it show all actions
     Table::new(rows)
         .block(
             Block::default()

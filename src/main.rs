@@ -15,6 +15,9 @@ use youtube_dl::{
 
 mod edit;
 
+/// Main function
+///
+/// Made async to support async
 #[tokio::main]
 async fn main() -> Result<()> {
     // This program manages music in FLAC format
@@ -197,6 +200,9 @@ fn ffmpeg_convert_to_flac(input_file: &Path, output_file: &Path) -> Result<()> {
     }
 }
 
+/// Executed by the edit command.
+///
+/// Launches a TUI for editing metadata
 async fn edit(_args: &ArgMatches) -> Result<()> {
     tui_logger::init_logger(log::LevelFilter::Trace).unwrap();
     tui_logger::set_default_level(log::LevelFilter::Trace);

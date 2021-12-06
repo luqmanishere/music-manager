@@ -10,7 +10,7 @@ use crossterm::{
 };
 
 use eyre::Result;
-use log::{error, warn};
+use log::error;
 use tui::{backend::CrosstermBackend, Terminal};
 
 use crate::edit::ui::check_size;
