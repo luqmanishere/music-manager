@@ -1,6 +1,7 @@
 use std::{path::Path, sync::Arc};
 
 use clap::{crate_authors, crate_version, App as CApp, AppSettings, Arg, ArgMatches};
+use dialoguer::{theme::ColorfulTheme, Select};
 use edit::{
     app::App,
     io::{handler::IoAsyncHandler, IoEvent},
@@ -95,60 +96,73 @@ fn download(args: &ArgMatches) -> Result<()> {
 
     match ytsearch {
         Playlist(playlist) => {
-            let mut count = 1;
             let entries = playlist
                 .entries
                 .ok_or_else(|| eyre!("Can't get video entries"))?;
+
+            let mut count = 1;
+            let mut entries_vec = vec![];
             for video in &entries {
-                println!(
+                entries_vec.push(format!(
                     "{}. Title: {}, Channel:{}",
                     count,
                     video.title,
                     video.channel.as_ref().unwrap()
-                );
+                ));
                 count += 1;
             }
+
             if !args.is_present("search-only") {
-                println!("Choose a video to download from the list");
-                let mut option_picked = String::new();
-                std::io::stdin().read_line(&mut option_picked)?;
-                let option = option_picked
-                    .trim()
-                    .parse::<usize>()
-                    .wrap_err_with(|| eyre!("Can't convert input into usize"))?;
+                println!("[Enter] or [Space] to select: ");
 
-                let output_format = music_dir.join("%(title)s.%(ext)s");
-                let video = &entries
-                    .get(option - 1)
-                    .ok_or_else(|| eyre!("Can't get entry number: {}", option))?;
+                if let Some(selection) = Select::with_theme(&ColorfulTheme::default())
+                    .items(&entries_vec)
+                    .default(0)
+                    .interact_opt()?
+                {
+                    let output_format = music_dir.join("%(title)s.%(ext)s");
+                    let video = &entries
+                        .get(selection)
+                        .ok_or_else(|| eyre!("Can't get entry number: {}", selection))?;
 
-                let mut video_title = video.title.replace("/", "_").replace(":", " -");
-                video_title.push_str(".opus");
+                    let mut video_title = video.title.replace("/", "_").replace(":", " -");
+                    video_title.push_str(".opus");
 
-                let mut filename_opus = music_dir.join(&video_title);
-                filename_opus.set_extension("opus");
-                let filename_flac = filename_opus.with_extension("flac");
+                    let mut filename_opus = music_dir.join(&video_title);
+                    filename_opus.set_extension("opus");
+                    let filename_flac = filename_opus.with_extension("flac");
 
-                if !filename_opus.exists() && !filename_flac.exists() {
-                    // Download if opus does not exist
-                    println!(
-                        "Downloading: {} from channel: {} using youtube-dl...",
-                        video.title,
-                        video.channel.as_ref().unwrap()
-                    );
-                    youtube_dl_download_audio(video, &output_format)?;
+                    if !filename_opus.exists() && !filename_flac.exists() {
+                        // Download if opus does not exist
+                        println!(
+                            "Downloading: {} from channel: {} using youtube-dl...",
+                            video.title,
+                            video.channel.as_ref().unwrap()
+                        );
+                        youtube_dl_download_audio(video, &output_format)?;
 
-                    ffmpeg_convert_to_flac(&filename_opus, &filename_flac)?;
-                } else if !filename_flac.exists() && filename_opus.exists() {
-                    ffmpeg_convert_to_flac(&filename_opus, &filename_flac)?;
+                        ffmpeg_convert_to_flac(&filename_opus, &filename_flac)?;
+                    } else if !filename_flac.exists() && filename_opus.exists() {
+                        // File is downloaded, but not yet converted
+                        ffmpeg_convert_to_flac(&filename_opus, &filename_flac)?;
+                    } else {
+                        // If opus file does not exist
+                        println!("Song is already downloaded");
+                    }
                 } else {
-                    // If opus file does not exist
-                    println!("Song is already downloaded");
+                    return Err(eyre!("User canceled"));
+                }
+            } else {
+                // Shows search results
+                println!("Search results: ");
+                for entries in entries_vec {
+                    println!("{}", entries);
                 }
             }
         }
         SingleVideo(video) => {
             println!("Title: {}, Channel:{}", video.title, video.channel.unwrap())
+            // TODO: handle the case of only 1 video coming up on the search (as impossible that is)
         }
     }
 
