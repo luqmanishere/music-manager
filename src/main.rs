@@ -327,7 +327,7 @@ fn list(_args: &ArgMatches) -> Result<()> {
     let music_dir = directories_next::UserDirs::new().unwrap();
     let music_dir = music_dir.audio_dir().unwrap();
     let database = Database::open_from_path(music_dir.join("database.sqlite"))?;
-    
+
     let songs = database.query_all_song_data()?;
 
     println!("List of songs in database:");
