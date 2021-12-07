@@ -1,19 +1,24 @@
 use std::{path::Path, sync::Arc};
 
 use clap::{crate_authors, crate_version, App as CApp, AppSettings, Arg, ArgMatches};
-use dialoguer::{theme::ColorfulTheme, Select};
+use dialoguer::{theme::ColorfulTheme, Confirm, Input, Select};
 use edit::{
     app::App,
     io::{handler::IoAsyncHandler, IoEvent},
     start_ui,
 };
 use eyre::{eyre, Context, Result};
+use image::{jpeg::JpegEncoder, ImageOutputFormat, ImageFormat};
 use log::{debug, info};
+use metaflac::Tag;
 use youtube_dl::{
     SearchOptions, SingleVideo as Video, YoutubeDl,
     YoutubeDlOutput::{Playlist, SingleVideo},
 };
 
+use crate::data::{database::Database, song::Song};
+
+mod data;
 mod edit;
 
 /// Main function
@@ -32,7 +37,8 @@ async fn main() -> Result<()> {
                 matches
                     .subcommand_matches("download")
                     .ok_or_else(|| eyre!("No arguments gave to subcommand download"))?,
-            )?;
+            )
+            .await?;
         }
         Some("edit") => {
             edit(
@@ -79,7 +85,7 @@ fn setup_cli() -> ArgMatches {
         .get_matches()
 }
 
-fn download(args: &ArgMatches) -> Result<()> {
+async fn download(args: &ArgMatches) -> Result<()> {
     let music_dir = directories_next::UserDirs::new()
         .ok_or_else(|| eyre!("directories_next failed to initialize"))?;
     let music_dir = music_dir
@@ -148,6 +154,68 @@ fn download(args: &ArgMatches) -> Result<()> {
                     } else {
                         // If opus file does not exist
                         println!("Song is already downloaded");
+                    }
+
+                    // Add the song to the database
+                    let edit_metadata = Confirm::with_theme(&ColorfulTheme::default())
+                        .with_prompt("Do you want to edit metadata now?")
+                        .default(true)
+                        .interact()?;
+                    if edit_metadata {
+                        let song_title: String = Input::with_theme(&ColorfulTheme::default())
+                            .with_prompt("Song title")
+                            .default(video_title)
+                            .interact()?;
+                        let song_artist: String = Input::with_theme(&ColorfulTheme::default())
+                            .with_prompt("Song artist: ")
+                            .default(video.channel.clone().unwrap())
+                            .interact()?;
+                        let song_album: String = Input::with_theme(&ColorfulTheme::default())
+                            .with_prompt("Song album: ")
+                            .default("Unknown".to_string())
+                            .interact()?;
+
+                        let mut tag = Tag::read_from_path(&filename_flac)?;
+                        tag.set_vorbis("TITLE", vec![song_title.clone()]);
+                        tag.set_vorbis("ARTIST", vec![song_artist.clone()]);
+                        tag.set_vorbis("ALBUM", vec![song_album.clone()]);
+
+                        let request = reqwest::get(video.thumbnail.clone().unwrap()).await;
+                        match request {
+                            Ok(request) => {
+                                let picture =
+                                    image::load_from_memory(&request.bytes().await?.to_vec())?;
+                                let mut vect = vec![];
+                                picture.write_to(&mut vect, ImageFormat::Jpeg)?;
+                                tag.add_picture(
+                                    "image/jpeg",
+                                    metaflac::block::PictureType::CoverFront,
+                                    vect,
+                                );
+                            }
+                            Err(e) => {
+                                println!("Error: {}", e);
+                            }
+                        };
+                        tag.save()?;
+
+                        let database = Database::open_from_path(music_dir.join("database.sqlite"))?;
+                        database.insert_song(&Song {
+                            file_path: filename_flac.clone(),
+                            file_name: filename_flac
+                                .file_name()
+                                .unwrap()
+                                .to_str()
+                                .unwrap()
+                                .to_string(),
+                            title: Some(song_title),
+                            artists: Some(vec![song_artist]),
+                            album: Some(song_album),
+                            youtube_id: Some(video.id.clone()),
+                            thumbnail_url: Some(video.thumbnail.clone().unwrap()),
+                            ..Default::default()
+                        })?;
+                        println!("Inserted into database");
                     }
                 } else {
                     return Err(eyre!("User canceled"));

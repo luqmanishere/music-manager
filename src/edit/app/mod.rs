@@ -1,9 +1,9 @@
 use log::{debug, error, info, warn};
 use tui_logger::TuiWidgetState;
 
-use crate::edit::app::actions::Action;
+use crate::{edit::app::actions::Action, data::song::Song};
 
-use self::{actions::Actions, dir::DirListState, song::Song};
+use self::{actions::Actions, dir::DirListState};
 
 use super::{
     inputs::{key::Key, InputBuffer},
@@ -12,7 +12,6 @@ use super::{
 
 pub mod actions;
 pub mod dir;
-pub mod song;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum AppReturn {
