@@ -8,7 +8,7 @@ use edit::{
     start_ui,
 };
 use eyre::{eyre, Context, Result};
-use image::{jpeg::JpegEncoder, ImageOutputFormat, ImageFormat};
+use image::ImageFormat;
 use log::{debug, info};
 use metaflac::Tag;
 use youtube_dl::{
@@ -48,6 +48,13 @@ async fn main() -> Result<()> {
             )
             .await?;
         }
+        Some("list") => {
+            list(
+                matches
+                    .subcommand_matches("list")
+                    .ok_or_else(|| eyre!("No arguments gave to subcommand list"))?,
+            )?;
+        }
         Some(_) => {
             // TODO: handle the error instead of panicking
             panic!("CLAP IS NOT WORKING");
@@ -82,6 +89,7 @@ fn setup_cli() -> ArgMatches {
                 ),
         )
         .subcommand(CApp::new("edit").about("Edit song library"))
+        .subcommand(CApp::new("list").about("List songs registered in the database"))
         .get_matches()
 }
 
@@ -186,6 +194,7 @@ async fn download(args: &ArgMatches) -> Result<()> {
                                 let picture =
                                     image::load_from_memory(&request.bytes().await?.to_vec())?;
                                 let mut vect = vec![];
+                                // BUG: Figure out why the picture is black and white
                                 picture.write_to(&mut vect, ImageFormat::Jpeg)?;
                                 tag.add_picture(
                                     "image/jpeg",
@@ -311,5 +320,23 @@ async fn edit(_args: &ArgMatches) -> Result<()> {
 
     start_ui(&app_ui).await?;
 
+    Ok(())
+}
+
+fn list(_args: &ArgMatches) -> Result<()> {
+    let music_dir = directories_next::UserDirs::new().unwrap();
+    let music_dir = music_dir.audio_dir().unwrap();
+    let database = Database::open_from_path(music_dir.join("database.sqlite"))?;
+    
+    let songs = database.query_all_song_data()?;
+
+    println!("List of songs in database:");
+    for song in songs {
+        let song_title = song.title.clone().unwrap_or_else(|| "None".to_string());
+        let song_id = song.id.unwrap();
+        let song_artist = song.artists.unwrap();
+        let song_artist = song_artist.first().unwrap();
+        println!("{}. {} - {}", song_id, song_title, song_artist);
+    }
     Ok(())
 }

@@ -1,7 +1,7 @@
 use log::{debug, error, info, warn};
 use tui_logger::TuiWidgetState;
 
-use crate::{edit::app::actions::Action, data::song::Song};
+use crate::{data::song::Song, edit::app::actions::Action};
 
 use self::{actions::Actions, dir::DirListState};
 

@@ -195,7 +195,6 @@ fn draw_help(actions: &Actions) -> Table {
         .column_spacing(1)
 }
 
-
 pub fn check_size(rect: &Rect) -> bool {
     !(rect.width < 30 || rect.height < 15)
 }

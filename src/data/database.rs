@@ -62,7 +62,7 @@ impl Database {
                 row.get(5).ok(),
                 row.get(6).ok(),
                 row.get(7).ok(),
-                row.get(8).ok()
+                row.get(8).ok(),
             )
             .unwrap())
         })?;
