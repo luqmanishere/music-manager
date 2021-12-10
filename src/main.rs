@@ -1,7 +1,7 @@
 use std::{path::Path, sync::Arc};
 
 use clap::{crate_authors, crate_version, App as CApp, AppSettings, Arg, ArgMatches};
-use dialoguer::{theme::ColorfulTheme, Confirm, Input, Select};
+use dialoguer::{theme::ColorfulTheme, Confirm, Input, MultiSelect, Select};
 use edit::{
     app::App,
     io::{handler::IoAsyncHandler, IoEvent},
@@ -55,6 +55,20 @@ async fn main() -> Result<()> {
                     .ok_or_else(|| eyre!("No arguments gave to subcommand list"))?,
             )?;
         }
+        Some("remove") => {
+            remove(
+                matches
+                    .subcommand_matches("remove")
+                    .ok_or_else(|| eyre!("No arguments gave to subcommand remove"))?,
+            )?;
+        }
+        Some("search") => {
+            search(
+                matches
+                    .subcommand_matches("search")
+                    .ok_or_else(|| eyre!("No arguments gave to subcommand search"))?,
+            )?;
+        }
         Some(_) => {
             // TODO: handle the error instead of panicking
             panic!("CLAP IS NOT WORKING");
@@ -85,11 +99,36 @@ fn setup_cli() -> ArgMatches {
                         .about("The title of the song to be downloaded")
                         .takes_value(true)
                         .required(true)
+                        .multiple_values(true)
+                        .use_delimiter(false)
                         .index(1),
                 ),
         )
         .subcommand(CApp::new("edit").about("Edit song library"))
         .subcommand(CApp::new("list").about("List songs registered in the database"))
+        .subcommand(
+            CApp::new("remove")
+                .about("Remove a song registered in the database")
+                .setting(AppSettings::ArgRequiredElseHelp)
+                .arg(Arg::new("id").takes_value(true).long("id").short('i'))
+                .arg(
+                    Arg::new("title")
+                        .takes_value(true)
+                        .long("title")
+                        .short('t')
+                        .forbid_empty_values(true),
+                ),
+        )
+        .subcommand(
+            CApp::new("search")
+                .about("Search for songs in database")
+                .arg(
+                    Arg::new("title")
+                        .takes_value(true)
+                        .required(true)
+                        .forbid_empty_values(true),
+                ),
+        )
         .get_matches()
 }
 
@@ -101,8 +140,10 @@ async fn download(args: &ArgMatches) -> Result<()> {
         .ok_or_else(|| eyre!("directories_next failed to retrieve music dir"))?
         .to_path_buf();
     let title = args
-        .value_of("title")
-        .ok_or_else(|| eyre!("Song title is not given"))?;
+        .values_of("title")
+        .ok_or_else(|| eyre!("Song title is not given"))?
+        .collect::<Vec<&str>>()
+        .join(" ");
     let search_options = SearchOptions::youtube(title).with_count(5);
     let ytsearch = YoutubeDl::search_for(&search_options)
         .socket_timeout("10")
@@ -144,7 +185,7 @@ async fn download(args: &ArgMatches) -> Result<()> {
 
                     let mut filename_opus = music_dir.join(&video_title);
                     filename_opus.set_extension("opus");
-                    let filename_flac = filename_opus.with_extension("flac");
+                    let mut filename_flac = filename_opus.with_extension("flac");
 
                     if !filename_opus.exists() && !filename_flac.exists() {
                         // Download if opus does not exist
@@ -162,6 +203,33 @@ async fn download(args: &ArgMatches) -> Result<()> {
                     } else {
                         // If opus file does not exist
                         println!("Song is already downloaded");
+                    }
+
+                    let rename_file = Confirm::with_theme(&ColorfulTheme::default())
+                        .with_prompt("Do you want to rename the file?")
+                        .default(true)
+                        .interact()?;
+
+                    if rename_file {
+                        let mut filename_new_input = Input::with_theme(&ColorfulTheme::default())
+                            .with_prompt("File name: ")
+                            .default(
+                                filename_flac
+                                    .file_name()
+                                    .unwrap()
+                                    .to_str()
+                                    .unwrap()
+                                    .to_string(),
+                            )
+                            .interact()?;
+                        filename_new_input.push_str(".flac");
+
+                        let mut filename_new = filename_flac.clone();
+                        filename_new.set_file_name(&filename_new_input);
+
+                        std::fs::rename(&filename_flac, filename_new)?;
+                        filename_flac.set_file_name(filename_new_input);
+                        println!("File rename successful");
                     }
 
                     // Add the song to the database
@@ -331,12 +399,123 @@ fn list(_args: &ArgMatches) -> Result<()> {
     let songs = database.query_all_song_data()?;
 
     println!("List of songs in database:");
+    let mut count = 1;
     for song in songs {
         let song_title = song.title.clone().unwrap_or_else(|| "None".to_string());
         let song_id = song.id.unwrap();
         let song_artist = song.artists.unwrap();
         let song_artist = song_artist.first().unwrap();
-        println!("{}. {} - {}", song_id, song_title, song_artist);
+        println!(
+            "{}. {} - {} [ID: {}]",
+            count, song_title, song_artist, song_id,
+        );
+        count += 1;
     }
+    Ok(())
+}
+
+fn remove(args: &ArgMatches) -> Result<()> {
+    // TODO: Complete remove function
+    let music_dir = directories_next::UserDirs::new().unwrap();
+    let music_dir = music_dir
+        .audio_dir()
+        .ok_or_else(|| eyre!("Couldn't get user music dir."))?;
+    let database = Database::open_from_path(music_dir.join("database.sqlite"))?;
+
+    match args.value_of("title") {
+        Some(song_title) => {
+            // TODO: Implement removing via song_title
+            println!("Searching via song title...");
+            match database.search_song(song_title) {
+                Ok(songs) => {
+                    println!("Results found!");
+                    let to_delete = MultiSelect::with_theme(&ColorfulTheme::default())
+                        .with_prompt("Select songs to delete:")
+                        .items(&songs)
+                        .interact()?;
+                    for index in to_delete {
+                        let song = songs.get(index).unwrap();
+                        let id = song.id.unwrap();
+                        println!(
+                            "Removing: {} - {} [ID: {}]",
+                            song.title.as_ref().unwrap(),
+                            song.artists.as_ref().unwrap().join(":"),
+                            id
+                        );
+                        match database.remove_song(id) {
+                            Ok(_) => {
+                                println!("Song removed from database. Removing old file...");
+                                std::fs::remove_file(music_dir.join(&song.file_name))?;
+                                println!("File removed.");
+                            }
+                            Err(e) => {
+                                eprintln!("Error: {}", e);
+                            }
+                        }
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                }
+            }
+        }
+        None => {
+            let song_id = args.value_of("id").unwrap().parse::<usize>()?;
+            let song = database.query_song_by_id(song_id)?;
+            let song = song.first().unwrap();
+
+            // TODO: Show what song is to be deleted
+            println!(
+                "Removing: {} - {} [ID: {}]",
+                song.title.as_ref().unwrap(),
+                song.artists.as_ref().unwrap().join(":"),
+                song.id.unwrap()
+            );
+            match database.remove_song(song_id) {
+                Ok(_) => {
+                    println!("Song removed from database. Removing old file...");
+                    std::fs::remove_file(music_dir.join(&song.file_name))?;
+                    println!("File removed.");
+                }
+                Err(e) => {
+                    eprintln!("Error: {}", e)
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+fn search(args: &ArgMatches) -> Result<()> {
+    let song_title = args.value_of("title").unwrap();
+    let music_dir = directories_next::UserDirs::new().unwrap();
+    let music_dir = music_dir
+        .audio_dir()
+        .ok_or_else(|| eyre!("Couldn't get user music dir."))?;
+    let database = Database::open_from_path(music_dir.join("database.sqlite"))?;
+
+    match database.search_song(song_title) {
+        Ok(songs) => {
+            println!("Results found: ");
+            let mut count = 1;
+
+            for song in songs {
+                let song_title = song.title.clone().unwrap();
+                let song_artist = song.artists.clone().unwrap().join(":");
+                let song_id = song.id.unwrap();
+                let path = song.file_path;
+                println!(
+                    "{}. {} - {} [ID: {}]",
+                    count, song_title, song_artist, song_id
+                );
+                println!("\tPath: {}", path.display());
+                count += 1;
+            }
+        }
+        Err(e) => {
+            eprintln!("Error: {}", e);
+        }
+    }
+
     Ok(())
 }
