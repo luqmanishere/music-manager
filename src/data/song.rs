@@ -1,4 +1,5 @@
 use std::{
+    fmt::Display,
     path::{Path, PathBuf},
     vec,
 };
@@ -18,7 +19,7 @@ pub enum MetadataSource {
 
 #[derive(DebugStub)]
 pub struct Song {
-    pub id: Option<i32>,
+    pub id: Option<usize>,
     pub file_path: PathBuf,
     pub file_name: String,
     #[debug_stub = "metaflac::Tag"]
@@ -54,7 +55,7 @@ impl Song {
     // TODO: Default to this for app display
     #[allow(clippy::too_many_arguments)]
     pub fn from_database(
-        id: Option<i32>,
+        id: Option<usize>,
         path: String,
         file_name: String,
         title: Option<String>,
@@ -85,8 +86,7 @@ impl Song {
             tag.set_vorbis("ALBUM", vec![album]);
         }
 
-        // TODO: fix file_path
-        let file_path = Path::new(&file_name);
+        let file_path = Path::new(&path);
 
         let mut song = Self {
             id,
@@ -278,6 +278,8 @@ impl Song {
             && song_left.genre == song_right.genre
             && song_left.youtube_id == song_right.youtube_id
             && song_left.thumbnail_url == song_right.thumbnail_url
+            && song_left.file_name == song_right.file_name
+            && song_left.file_path == song_right.file_path
     }
 
     /// Select the next item.
@@ -336,5 +338,18 @@ impl Default for Song {
             thumbnail_url: Default::default(),
             metadata_source: MetadataSource::File,
         }
+    }
+}
+
+impl Display for Song {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{} - {} [ID: {}, Album: {}]",
+            self.title.clone().unwrap(),
+            self.artists.clone().unwrap().join(":"),
+            self.id.unwrap(),
+            self.album.clone().unwrap()
+        )
     }
 }
