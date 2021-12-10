@@ -1,16 +1,16 @@
-* music-manager
+# music-manager
 [![dependency status](https://deps.rs/repo/github/luqmanishere/music-manager/status.svg)](https://deps.rs/repo/github/luqmanishere/music-manager)
 
 Made by me, for me.
 
-** What? Why?
+## What? Why?
 Automate all the things. Haha.
 
 Building things is fun too.
 
 
 
-** Things to add
+## Things to add
 - GUI!
 - Restore songs from database
 - Add option to add cover pictures
