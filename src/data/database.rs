@@ -76,8 +76,8 @@ impl Database {
 
     /// Find records by its name. Song title is the exact title of the song.
     /// If an undeterminate search is required, use `search_song`
+    #[allow(dead_code)]
     pub fn query_song_by_name(&self, song_title: &str) -> Result<Vec<Song>> {
-        // TODO: Allow querying for songs with possible same names
         let query = format!("SELECT * from songs WHERE song_title = '{}'", song_title);
         let mut stmt = self.connection.prepare(&query)?;
         let song_iter = stmt.query_map([], |row| {
@@ -105,7 +105,6 @@ impl Database {
 
     /// Find a record by its ID
     pub fn query_song_by_id(&self, song_id: usize) -> Result<Vec<Song>> {
-        // TODO: Allow querying for songs with possible same names
         let query = format!("SELECT * from songs WHERE id = '{}'", song_id);
         let mut stmt = self.connection.prepare(&query)?;
         let song_iter = stmt.query_map([], |row| {
@@ -214,7 +213,6 @@ impl Database {
 
     /// Returns songs that contains a string in its metadata
     pub fn search_song(&self, search_term: &str) -> Result<Vec<Song>> {
-        // TODO: Finish search song function
         let query = format!(
             "SELECT * from songs
                 WHERE song_title LIKE '%{}%' 
@@ -250,6 +248,11 @@ impl Database {
         self.connection.execute(&query, [])?;
 
         Ok(())
+    }
+
+    #[allow(dead_code)]
+    pub fn database_path(&self) -> PathBuf {
+        self.path.to_path_buf()
     }
 }
 

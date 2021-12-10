@@ -415,7 +415,6 @@ fn list(_args: &ArgMatches) -> Result<()> {
 }
 
 fn remove(args: &ArgMatches) -> Result<()> {
-    // TODO: Complete remove function
     let music_dir = directories_next::UserDirs::new().unwrap();
     let music_dir = music_dir
         .audio_dir()
@@ -424,7 +423,6 @@ fn remove(args: &ArgMatches) -> Result<()> {
 
     match args.value_of("title") {
         Some(song_title) => {
-            // TODO: Implement removing via song_title
             println!("Searching via song title...");
             match database.search_song(song_title) {
                 Ok(songs) => {
@@ -464,7 +462,6 @@ fn remove(args: &ArgMatches) -> Result<()> {
             let song = database.query_song_by_id(song_id)?;
             let song = song.first().unwrap();
 
-            // TODO: Show what song is to be deleted
             println!(
                 "Removing: {} - {} [ID: {}]",
                 song.title.as_ref().unwrap(),
