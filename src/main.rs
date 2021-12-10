@@ -1,6 +1,8 @@
 use std::{path::Path, sync::Arc};
 
-use clap::{crate_authors, crate_version, App as CApp, AppSettings, Arg, ArgMatches};
+use clap::{App as CApp, AppSettings, Arg, ArgMatches};
+use clap::crate_authors;
+use clap::crate_version;
 use dialoguer::{theme::ColorfulTheme, Confirm, Input, MultiSelect, Select};
 use edit::{
     app::App,
@@ -85,7 +87,7 @@ fn setup_cli() -> ArgMatches {
         .version(crate_version!())
         .author(crate_authors!())
         .setting(AppSettings::SubcommandRequiredElseHelp)
-        .setting(AppSettings::HelpRequired)
+        .setting(AppSettings::ArgRequiredElseHelp)
         .subcommand(
             CApp::new("download")
                 .about("Downloads the song title given")
@@ -96,7 +98,6 @@ fn setup_cli() -> ArgMatches {
                 )
                 .arg(
                     Arg::new("title")
-                        .about("The title of the song to be downloaded")
                         .takes_value(true)
                         .required(true)
                         .multiple_values(true)

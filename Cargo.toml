@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 youtube_dl = "0.6.3"
 eyre = "0.6.5"
-clap = "~3.0.0-beta.5"
+clap = {version = "~3.0.0-beta.5", features = ["cargo", "wrap_help"] }
 metaflac = "0.2.5"
 directories-next = "2"
 tui = {version = "0.16", features = ["crossterm"]}
