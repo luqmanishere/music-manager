@@ -45,6 +45,7 @@ impl Database {
         Ok(database)
     }
 
+    /// Returns all records in the database
     pub fn query_all_song_data(&self) -> Result<Vec<Song>> {
         let mut stmt = self.connection.prepare(
             "
@@ -68,12 +69,14 @@ impl Database {
         })?;
         let song_vec = song_iter.map(|song| song.unwrap()).collect::<Vec<Song>>();
         if song_vec.is_empty() {
-            return Err(eyre!("No results were found"));
+            return Err(eyre!("No results were found. Is the database empty?"));
         }
         Ok(song_vec)
     }
 
-    pub fn query_song(&self, song_title: &str) -> Result<Vec<Song>> {
+    /// Find records by its name. Song title is the exact title of the song.
+    /// If an undeterminate search is required, use `search_song`
+    pub fn query_song_by_name(&self, song_title: &str) -> Result<Vec<Song>> {
         // TODO: Allow querying for songs with possible same names
         let query = format!("SELECT * from songs WHERE song_title = '{}'", song_title);
         let mut stmt = self.connection.prepare(&query)?;
@@ -94,12 +97,41 @@ impl Database {
         let song_vec = song_iter.map(|song| song.unwrap()).collect::<Vec<Song>>();
 
         if song_vec.is_empty() {
-            return Err(eyre!("No results were found"));
+            return Err(eyre!("No results were found. Is the database empty?"));
         }
 
         Ok(song_vec)
     }
 
+    /// Find a record by its ID
+    pub fn query_song_by_id(&self, song_id: usize) -> Result<Vec<Song>> {
+        // TODO: Allow querying for songs with possible same names
+        let query = format!("SELECT * from songs WHERE id = '{}'", song_id);
+        let mut stmt = self.connection.prepare(&query)?;
+        let song_iter = stmt.query_map([], |row| {
+            Ok(Song::from_database(
+                row.get(0).ok(),
+                row.get(1)?,
+                row.get(2)?,
+                row.get(3).ok(),
+                row.get(4).ok(),
+                row.get(5).ok(),
+                row.get(6).ok(),
+                row.get(7).ok(),
+                row.get(8).ok(),
+            )
+            .unwrap())
+        })?;
+        let song_vec = song_iter.map(|song| song.unwrap()).collect::<Vec<Song>>();
+
+        if song_vec.is_empty() {
+            return Err(eyre!("No results were found. Is the database empty?"));
+        }
+
+        Ok(song_vec)
+    }
+
+    /// Insert a record into the database
     pub fn insert_song(&self, song: &Song) -> Result<()> {
         let mut artist_string = String::new();
         for artist in song.artists.as_ref().unwrap_or(&vec!["None".to_string()]) {
@@ -140,8 +172,8 @@ impl Database {
         Ok(())
     }
 
+    /// Updates an existing record in the database. Note that id and timestamp can never be changed
     pub fn update_song(&self, song: &Song) -> Result<()> {
-        // TODO: Complete function to update existing records
         let mut artist_string = String::new();
         for artist in song.artists.as_ref().unwrap_or(&vec!["None".to_string()]) {
             artist_string.push_str(artist);
@@ -177,6 +209,46 @@ impl Database {
                 song.file_path.to_str()
             ],
         )?;
+        Ok(())
+    }
+
+    /// Returns songs that contains a string in its metadata
+    pub fn search_song(&self, search_term: &str) -> Result<Vec<Song>> {
+        // TODO: Finish search song function
+        let query = format!(
+            "SELECT * from songs
+                WHERE song_title LIKE '%{}%' 
+                OR song_artist LIKE '%{}%' 
+                OR song_album LIKE '%{}%'",
+            search_term, search_term, search_term
+        );
+        let mut stmt = self.connection.prepare(&query)?;
+        let song_iter = stmt.query_map([], |row| {
+            Ok(Song::from_database(
+                row.get(0).ok(),
+                row.get(1)?,
+                row.get(2)?,
+                row.get(3).ok(),
+                row.get(4).ok(),
+                row.get(5).ok(),
+                row.get(6).ok(),
+                row.get(7).ok(),
+                row.get(8).ok(),
+            )
+            .unwrap())
+        })?;
+        let song_vec = song_iter.map(|song| song.unwrap()).collect::<Vec<Song>>();
+
+        if song_vec.is_empty() {
+            return Err(eyre!("No results were found."));
+        }
+
+        Ok(song_vec)
+    }
+    pub fn remove_song(&self, id: usize) -> Result<()> {
+        let query = format!("DELETE from songs WHERE id = {}", id);
+        self.connection.execute(&query, [])?;
+
         Ok(())
     }
 }
@@ -257,13 +329,13 @@ mod tests {
             })
             .unwrap();
 
-        let mut new_song = database.query_song("test").unwrap();
+        let mut new_song = database.query_song_by_name("test").unwrap();
         let mut new_song = new_song.get_mut(0).unwrap();
 
         new_song.title = Some("test2".to_string());
         database.update_song(new_song).unwrap();
 
-        let updated_title = database.query_song("test2").unwrap();
+        let updated_title = database.query_song_by_name("test2").unwrap();
 
         dbg!(&original_song);
         dbg!(&new_song);
