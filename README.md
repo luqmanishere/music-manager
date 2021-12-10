@@ -1,4 +1,6 @@
 * music-manager
+[![dependency status](https://deps.rs/repo/github/luqmanishere/music-manager/status.svg)](https://deps.rs/repo/github/luqmanishere/music-manager)
+
 Made by me, for me.
 
 ** What? Why?
