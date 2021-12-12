@@ -1,4 +1,4 @@
-name: Rust general lints
+name: Rust Lints & Tests
 
 on: [push, pull_request]
 

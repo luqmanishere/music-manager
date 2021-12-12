@@ -1,8 +1,8 @@
 use std::{path::Path, sync::Arc};
 
-use clap::{App as CApp, AppSettings, Arg, ArgMatches};
 use clap::crate_authors;
 use clap::crate_version;
+use clap::{App as CApp, AppSettings, Arg, ArgMatches};
 use dialoguer::{theme::ColorfulTheme, Confirm, Input, MultiSelect, Select};
 use edit::{
     app::App,

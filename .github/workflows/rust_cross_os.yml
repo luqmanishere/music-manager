@@ -1,4 +1,4 @@
-name: Rust Multi Platform
+name: Rust Cross Platform Builds
 
 on: [push, pull_request]
 
@@ -18,7 +18,7 @@ jobs:
           override: true
 
       - name: Build
-        run: cargo build --all --release && strip target/release/PROJECT_NAME && mv target/release/PROJECT_NAME target/release/PROJECT_NAME_amd64
+        run: cargo build --all --release
 
   build-win:
     runs-on: windows-latest
@@ -53,5 +53,5 @@ jobs:
           override: true
 
       - name: Build for mac
-        run: cargo build --all --release && strip target/release/PROJECT_NAME && mv target/release/PROJECT_NAME target/release/PROJECT_NAME_darwin
+        run: cargo build --all --release
 
