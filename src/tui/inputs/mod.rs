@@ -1,4 +1,4 @@
-use crate::edit::inputs::key::*;
+use crate::tui::inputs::key::*;
 
 pub mod events;
 pub mod key;

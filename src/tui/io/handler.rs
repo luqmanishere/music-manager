@@ -3,7 +3,7 @@ use std::sync::Arc;
 use eyre::Result;
 use log::error;
 
-use crate::edit::app::App;
+use crate::tui::app::App;
 
 use super::IoEvent;
 

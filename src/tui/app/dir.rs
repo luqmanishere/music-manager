@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use tui::widgets::ListState;
+use tui_c::widgets::ListState;
 
 use eyre::Result;
 

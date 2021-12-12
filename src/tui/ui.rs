@@ -1,4 +1,4 @@
-use tui::{
+use tui_c::{
     backend::Backend,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
@@ -18,7 +18,6 @@ pub fn draw<B>(f: &mut Frame<B>, app: &mut App) -> Result<()>
 where
     B: Backend,
 {
-    // TODO check for valid size
     let selected_style = Style::default().fg(Color::Yellow);
     let default_style = Style::default().fg(Color::White);
 
@@ -201,9 +200,9 @@ pub fn check_size(rect: &Rect) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use tui::layout::Rect;
+    use tui_c::layout::Rect;
 
-    use crate::edit::ui::check_size;
+    use crate::tui::ui::check_size;
 
     #[test]
     fn should_warn_on_small_terminal() {

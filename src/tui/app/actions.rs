@@ -4,7 +4,7 @@ use log::warn;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
-use crate::edit::inputs::key::Key;
+use crate::tui::inputs::key::Key;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, EnumIter)]
 pub enum Action {

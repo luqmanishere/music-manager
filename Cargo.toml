@@ -11,7 +11,7 @@ eyre = "0.6.5"
 clap = {version = "~3.0.0-beta.5", features = ["cargo", "wrap_help"] }
 metaflac = "0.2.5"
 directories-next = "2"
-tui = {version = "0.16", features = ["crossterm"], default-features = false }
+tui_c = {version = "0.16", features = ["crossterm"], default-features = false, package = "tui" }
 crossterm = "0.22"
 unicode-width  = "0.1"
 debug_stub_derive = "0.3"

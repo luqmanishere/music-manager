@@ -4,7 +4,7 @@ use clap::crate_authors;
 use clap::crate_version;
 use clap::{App as CApp, AppSettings, Arg, ArgMatches};
 use dialoguer::{theme::ColorfulTheme, Confirm, Input, MultiSelect, Select};
-use edit::{
+use tui::{
     app::App,
     io::{handler::IoAsyncHandler, IoEvent},
     start_ui,
@@ -21,7 +21,7 @@ use youtube_dl::{
 use crate::data::{database::Database, song::Song};
 
 mod data;
-mod edit;
+mod tui;
 
 /// Main function
 ///

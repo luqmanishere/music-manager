@@ -7,7 +7,7 @@ use std::{
 use debug_stub_derive::DebugStub;
 use log::{debug, error, info, warn};
 use metaflac::Tag;
-use tui::widgets::ListState;
+use tui_c::widgets::ListState;
 
 use eyre::Result;
 
